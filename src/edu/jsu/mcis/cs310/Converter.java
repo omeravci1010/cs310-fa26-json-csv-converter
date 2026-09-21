@@ -78,7 +78,48 @@ public class Converter {
         
         try {
         
-            // INSERT YOUR CODE HERE
+            CSVReader reader = new CSVReader(new java.io.StringReader(csvString));
+
+        java.util.List<String[]> rows = reader.readAll();
+
+        reader.close();
+
+        JsonObject json = new JsonObject();
+
+        JsonArray prodNums = new JsonArray();
+        JsonArray colHeadings = new JsonArray();
+        JsonArray data = new JsonArray();
+
+        String[] headings = rows.get(0);
+
+        for (String heading : headings) {
+            colHeadings.add(heading);
+        }
+
+        for (int i = 1; i < rows.size(); i++) {
+
+            String[] row = rows.get(i);
+
+            prodNums.add(row[0]);
+
+            JsonArray episodeData = new JsonArray();
+
+            episodeData.add(row[1]);
+            episodeData.add(Long.parseLong(row[2]));
+            episodeData.add(Long.parseLong(row[3]));
+            episodeData.add(row[4]);
+            episodeData.add(row[5]);
+            episodeData.add(row[6]);
+
+            data.add(episodeData);
+
+        }
+
+        json.put("ProdNums", prodNums);
+        json.put("ColHeadings", colHeadings);
+        json.put("Data", data);
+
+        result = Jsoner.serialize(json);
             
         }
         catch (Exception e) {
@@ -96,7 +137,55 @@ public class Converter {
         
         try {
             
-            // INSERT YOUR CODE HERE
+            JsonObject json = (JsonObject) Jsoner.deserialize(jsonString);
+
+        JsonArray prodNums = (JsonArray) json.get("ProdNums");
+        JsonArray colHeadings = (JsonArray) json.get("ColHeadings");
+        JsonArray data = (JsonArray) json.get("Data");
+
+        java.util.List<String[]> rows = new java.util.ArrayList<>();
+
+        String[] headings = new String[colHeadings.size()];
+
+        for (int i = 0; i < colHeadings.size(); i++) {
+            headings[i] = (String) colHeadings.get(i);
+        }
+
+        rows.add(headings);
+
+        for (int i = 0; i < data.size(); i++) {
+
+            JsonArray episodeData = (JsonArray) data.get(i);
+
+            String[] row = new String[7];
+
+            row[0] = (String) prodNums.get(i);
+            row[1] = (String) episodeData.get(0);
+            row[2] = String.valueOf(episodeData.get(1));
+            row[3] = String.format("%02d", ((Number) episodeData.get(2)).intValue());
+            row[4] = (String) episodeData.get(3);
+            row[5] = (String) episodeData.get(4);
+            row[6] = (String) episodeData.get(5);
+
+            rows.add(row);
+
+        }
+
+        java.io.StringWriter stringWriter = new java.io.StringWriter();
+
+        CSVWriter writer = new CSVWriter(
+                stringWriter,
+                CSVWriter.DEFAULT_SEPARATOR,
+                CSVWriter.DEFAULT_QUOTE_CHARACTER,
+                CSVWriter.DEFAULT_ESCAPE_CHARACTER,
+                CSVWriter.DEFAULT_LINE_END
+        );
+
+        writer.writeAll(rows);
+
+        writer.close();
+
+        result = stringWriter.toString();
             
         }
         catch (Exception e) {
